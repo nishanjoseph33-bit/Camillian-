@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download project
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Flutter
@@ -18,27 +18,37 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Fix Flutter project folders
+      - name: Create Flutter Android project
+        run: |
+          if [ ! -d "android" ]; then
+            flutter create \
+              --platforms=android \
+              --project-name camillian_connect \
+              .
+          fi
+
+      - name: Prepare project folders
         run: |
           mkdir -p lib
           mkdir -p assets
 
-          if [ -f main.dart ]; then
-            mv main.dart lib/main.dart
+          if [ -f "main.dart" ]; then
+            cp main.dart lib/main.dart
           fi
 
-          if [ -f camillian_hero.png ]; then
-            mv camillian_hero.png assets/camillian_hero.png
+          if [ -f "camillian_hero.png" ]; then
+            cp camillian_hero.png assets/camillian_hero.png
           fi
 
-      - name: Create Android project
+      - name: Check Flutter project
         run: |
-          flutter create --platforms=android .
+          flutter --version
+          flutter pub get
 
-      - name: Get Flutter packages
-        run: flutter pub get
+      - name: Analyze Dart code
+        run: flutter analyze
 
-      - name: Build APK
+      - name: Build release APK
         run: flutter build apk --release
 
       - name: Upload APK
